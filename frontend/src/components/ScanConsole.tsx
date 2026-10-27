@@ -148,7 +148,7 @@ export const ScanConsole: React.FC<ScanConsoleProps> = ({
               Analyze where your personal phone number appears publicly across web directories, code repositories, and paste archives.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={handleOpenDorks}
@@ -426,6 +426,8 @@ export const ScanConsole: React.FC<ScanConsoleProps> = ({
                 <span className="status-pill pill-emerald text-[10px]">Valid Number</span>
               ) : parseData?.is_possible ? (
                 <span className="status-pill pill-amber text-[10px]">Possible</span>
+              ) : !parseData || !phoneNumber.trim() ? (
+                <span className="status-pill pill-neutral text-[10px]">Waiting for input</span>
               ) : (
                 <span className="status-pill pill-rose text-[10px]">Invalid Format</span>
               )}

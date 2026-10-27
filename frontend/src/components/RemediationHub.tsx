@@ -269,7 +269,7 @@ export const RemediationHub: React.FC<RemediationHubProps> = ({
                       <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">
                         Opt-Out Procedure:
                       </div>
-                      <ol className="list-decimal list-inside space-y-0.5 text-[11px] leading-relaxed">
+                      <ol className="list-decimal list-inside space-y-0.5 text-[11px] leading-relaxed [overflow-wrap:anywhere]">
                         {source.instructions.map((step, idx) => (
                           <li key={idx} className="text-slate-300">
                             {step.replace(/^\d+\.\s*/, "")}

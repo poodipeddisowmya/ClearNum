@@ -18,10 +18,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   setActiveTab,
 }) => {
   return (
-    <header className="border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] sticky top-0 z-40">
-      <div className="container-shell flex items-center justify-between h-16">
+    <header className="border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/90 backdrop-blur-md sticky top-0 z-40">
+      <div className="container-shell flex items-center justify-between gap-4 h-16">
         {/* Brand */}
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab("scan")}>
+        <button type="button" className="flex items-center gap-3 shrink-0 text-left" onClick={() => setActiveTab("scan")}>
           <div className="w-9 h-9 rounded-lg bg-sky-950/80 border border-sky-800 flex items-center justify-center text-sky-400 shadow-sm">
             <Shield className="w-5 h-5" />
           </div>
@@ -32,12 +32,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                 v1.0 Local
               </span>
             </div>
-            <p className="text-xs text-[var(--text-dim)]">Open-Source Phone Privacy & Remediation</p>
+            <p className="hidden xl:block text-xs text-[var(--text-dim)]">Open-source phone privacy & remediation</p>
           </div>
-        </div>
+        </button>
 
         {/* Navigation Tabs */}
-        <nav className="hidden md:flex items-center gap-1 bg-[var(--bg-app)] p-1 rounded-lg border border-[var(--border-subtle)]">
+        <nav aria-label="Main" className="hidden lg:flex items-center gap-1 bg-[var(--bg-app)] p-1 rounded-xl border border-[var(--border-subtle)]">
           {[
             { id: "scan", label: "Scan & Dorks" },
             { id: "exposures", label: "Exposures" },
@@ -48,10 +48,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+              aria-current={activeTab === tab.id ? "page" : undefined}
+              className={`px-3.5 py-1.5 rounded-lg text-[13px] font-semibold whitespace-nowrap transition-colors ${
                 activeTab === tab.id
-                  ? "bg-[var(--bg-elevated)] text-sky-400 shadow-sm border border-[var(--border-strong)]"
-                  : "text-[var(--text-muted)] hover:text-slate-200"
+                  ? "bg-[var(--bg-elevated)] text-sky-300 shadow-sm ring-1 ring-[var(--border-strong)]"
+                  : "text-[var(--text-muted)] hover:text-slate-100 hover:bg-[var(--bg-card)]"
               }`}
             >
               {tab.label}
@@ -60,12 +61,12 @@ export const Navbar: React.FC<NavbarProps> = ({
         </nav>
 
         {/* Identity & Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 shrink-0">
           {currentIdentity ? (
-            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md bg-[var(--bg-card)] border border-[var(--border-subtle)] text-xs">
+            <div className="hidden 2xl:flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-subtle)] text-xs whitespace-nowrap" title="Current number (masked)">
               <Lock className="w-3.5 h-3.5 text-emerald-400" />
               <span className="font-mono text-slate-200">{currentIdentity.masked_display}</span>
-              <span className="text-[10px] text-slate-400 bg-slate-800 px-1 rounded">HMAC</span>
+              
             </div>
           ) : null}
 
@@ -75,7 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             title="Load synthetic scenario with realistic data brokers and spam reports"
           >
             <Play className="w-3.5 h-3.5 text-sky-400" />
-            <span className="hidden sm:inline">Load Demo</span>
+            <span className="hidden xl:inline">Load Demo</span>
           </button>
 
           <button
@@ -84,13 +85,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             title="Zero-trace cryptographic wipe of all local records"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Purge</span>
+            <span className="hidden xl:inline">Purge</span>
           </button>
         </div>
       </div>
 
       {/* Mobile Sub-Navigation Bar */}
-      <div className="flex md:hidden border-t border-[var(--border-subtle)] px-3 py-2 overflow-x-auto gap-1.5 bg-[var(--bg-app)]">
+      <nav aria-label="Main" className="flex lg:hidden border-t border-[var(--border-subtle)] px-3 py-2 overflow-x-auto gap-1.5 bg-[var(--bg-app)]/80">
         {[
           { id: "scan", label: "Scan & Dorks" },
           { id: "exposures", label: "Exposures" },
@@ -101,7 +102,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-2.5 py-1 rounded text-xs font-semibold whitespace-nowrap transition-all ${
+            aria-current={activeTab === tab.id ? "page" : undefined}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
               activeTab === tab.id
                 ? "bg-[var(--bg-elevated)] text-sky-400 border border-[var(--border-strong)]"
                 : "text-[var(--text-muted)]"
@@ -110,7 +112,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {tab.label}
           </button>
         ))}
-      </div>
+      </nav>
     </header>
   );
 };

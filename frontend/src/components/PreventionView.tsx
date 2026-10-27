@@ -136,7 +136,7 @@ export const PreventionView: React.FC<PreventionViewProps> = ({ currentIdentity 
             <div className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-center">
               <div className="text-[10px] uppercase font-semibold text-slate-400">Success Rate</div>
               <div className="text-base font-bold font-mono text-emerald-400">
-                {Math.round(metrics.removal_success_rate * 100)}%
+                {Math.round(metrics.removal_success_rate)}%
               </div>
             </div>
             <div className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-center">

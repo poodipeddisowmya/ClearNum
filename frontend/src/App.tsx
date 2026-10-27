@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Navbar } from "./components/Navbar";
 import { ScanConsole } from "./components/ScanConsole";
 import { ExposuresView } from "./components/ExposuresView";
@@ -23,21 +23,6 @@ export function App() {
   const [exposures, setExposures] = useState<DiscoveredExposure[]>([]);
   const [selectedSourceId, setSelectedSourceId] = useState<string | undefined>(undefined);
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
-
-  // Initialize with default demo parse on mount
-  useEffect(() => {
-    async function initDefault() {
-      try {
-        const parsed = await parsePhone("+14155552671", "US");
-        setCurrentIdentity(parsed);
-        const expList = await getExposures(parsed.hmac_id).catch(() => []);
-        setExposures(expList);
-      } catch {
-        // Backend may be starting up
-      }
-    }
-    initDefault();
-  }, []);
 
   const showToast = (message: string, type: "success" | "info" | "error" = "info") => {
     setToast({ message, type });
@@ -115,7 +100,7 @@ export function App() {
 
       {/* Toast Alert */}
       {toast && (
-        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2.5 px-4 py-3 rounded-lg border shadow-xl text-xs font-semibold backdrop-blur-md transition-all animate-bounce bg-slate-900/90 text-slate-100 border-slate-700">
+        <div role="status" className="fixed bottom-5 right-5 left-5 sm:left-auto sm:max-w-md z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl border shadow-2xl text-sm font-medium backdrop-blur-md bg-slate-900/95 text-slate-100 border-slate-700">
           {toast.type === "success" && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
           {toast.type === "error" && <AlertCircle className="w-4 h-4 text-rose-400" />}
           {toast.type === "info" && <Info className="w-4 h-4 text-sky-400" />}
