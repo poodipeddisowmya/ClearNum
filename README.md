@@ -63,12 +63,24 @@ NumberShield helps individuals discover where their phone number is exposed onli
 - **Python 3.10+** (tested up to Python 3.14)
 - **Node.js 18+** & **npm** (for building the frontend)
 
-### Installation
+### One-click start (recommended)
+
+```bash
+git clone https://github.com/JeyaVardhan-L/ClearNum.git
+cd ClearNum
+```
+
+- **Windows:** double-click `start.bat` (or run it in a terminal).
+- **macOS / Linux:** run `./start.sh`.
+
+The first run creates a Python environment, installs the app and builds the web page (about 2–5 minutes). Every later run starts in seconds and opens **`http://127.0.0.1:8765`** in your browser. Close the window or press `Ctrl+C` to stop.
+
+### Manual installation
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/numbershield.git
-   cd numbershield
+   git clone https://github.com/JeyaVardhan-L/ClearNum.git
+   cd ClearNum
    ```
 
 2. **Set up Python Virtual Environment:**
@@ -155,7 +167,7 @@ numbershield serve --host 127.0.0.1 --port 8765
 - **State Transition Controller**: Move items strictly through legitimate lifecycle steps.
 
 ### 3. Remediation Hub
-- **25+ Curated Data Brokers**: Directory of major people-search brokers (FastPeopleSearch, TruePeopleSearch, Spokeo, Whitepages, Radaris, LexisNexis, etc.) with verified opt-out URLs, required verification info, and expected turnaround times.
+- **20 Curated Opt-Out Sources**: Truecaller plus major people-search brokers (FastPeopleSearch, TruePeopleSearch, Spokeo, Whitepages, Radaris, LexisNexis, etc.) with verified opt-out URLs, required verification info, and expected turnaround times.
 - **Legal Notice Generator**: Generate formal statutory letters citing CCPA/CPRA Cal. Civ. Code § 1798.105, GDPR Art. 17/21, TCPA 47 U.S.C. § 227, or TRAI Telecom Commercial Communications Regulations 1909.
 - **Export & Copy**: Instant copy or markdown download of customized legal letters.
 - **Search Delisting**: Step-by-step guides for Google PII Removal and Microsoft Bing Delisting.
@@ -188,7 +200,7 @@ numbershield serve --host 127.0.0.1 --port 8765
 
 ## 🧪 Testing & Quality Assurance
 
-NumberShield includes a comprehensive automated test suite with **61 passing tests**:
+NumberShield includes a comprehensive automated test suite with **148 passing tests**:
 
 - **Unit Tests**: Normalizer, Phone Permutations, Fuzzy Matcher, False Positive Date/UUID Rejection, SSRF Network Filter, Keyed HMAC, Redactor.
 - **Local Parser Tests**: MBOX parsing, Android SMS XML parsing.
