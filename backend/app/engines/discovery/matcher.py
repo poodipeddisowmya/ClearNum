@@ -59,10 +59,72 @@ def extract_context_snippet(text: str, match_start: int, match_end: int, window:
     return f"{prefix}{text[start:end].strip()}{suffix}"
 
 
+PHONE_RUN_PATTERN = re.compile(r"(?:\+|00)?[\d(][\d\s().\-]{5,}\d")
+
+
+def _match_grouped_digits(clean_text: str, phone: NormalizedPhone) -> Optional[MatchResult]:
+    """Finds the number however its digit groups are separated, by joining
+    consecutive groups of each phone-like run and comparing the digits."""
+    cc = str(phone.country_code)
+    nat = phone.digits_only[len(cc):] if phone.digits_only.startswith(cc) else ""
+    if len(nat) < 7:
+        return None
+    # digits -> (match_type, confidence); trunk-prefixed and +cc forms are unambiguous
+    targets = {
+        cc + nat: ("EXACT", 0.95),
+        cc + "0" + nat: ("EXACT", 0.95),
+        "0" + nat: ("EXACT", 0.95),
+        nat: ("PROBABLE", 0.8),
+    }
+    for run in PHONE_RUN_PATTERN.finditer(clean_text):
+        groups = [(m.start() + run.start(), m.end() + run.start(), m.group(0))
+                  for m in re.finditer(r"\d+", run.group(0))]
+        has_plus = run.group(0).startswith(("+", "00"))
+        for i in range(len(groups)):
+            if i == 1 and has_plus:
+                continue  # first group was a (different) country code
+            joined = ""
+            for j in range(i, len(groups)):
+                joined += groups[j][2]
+                if len(joined) > len(cc) + len(nat) + 1:
+                    break
+                hit = targets.get(joined)
+                if not hit:
+                    continue
+                start, end = groups[i][0], groups[j][1]
+                snippet = extract_context_snippet(clean_text, start, end)
+                if DATE_PATTERN.search(clean_text[start:end]) or UUID_PATTERN.search(snippet):
+                    continue
+                return MatchResult(True, hit[0], hit[1], clean_text[start:end], snippet)
+    return None
+
+
+def mask_phone_in_text(text: str, phone: NormalizedPhone, extra: str = "") -> str:
+    """Masks every known spelling of the target number in free text (snippets, titles),
+    so evidence can be stored and shown without the raw number."""
+    if not text or not phone.is_possible:
+        return text or ""
+    from backend.app.core.security import mask_phone_number
+    cc = str(phone.country_code)
+    nat = phone.digits_only[len(cc):] if phone.digits_only.startswith(cc) else ""
+    variants = {extra, phone.e164, phone.international, phone.national, phone.dashed,
+                phone.dotted, phone.spaced, phone.digits_only, nat}
+    for v in sorted((v for v in variants if v and len(v) >= 7), key=len, reverse=True):
+        text = text.replace(v, mask_phone_number(phone.e164))
+    return text
+
+
 def match_phone_in_text(text: str, phone: NormalizedPhone) -> MatchResult:
     """Analyzes a block of plain text or HTML for appearances of the target phone number.
-    Returns a MatchResult with classification, confidence score, and sanitized snippet.
+    Returns a MatchResult whose snippet has the number masked (raw digits stay in matched_text only).
     """
+    res = _match_phone_in_text_raw(text, phone)
+    if res.snippet:
+        res.snippet = mask_phone_in_text(res.snippet, phone, res.matched_text)
+    return res
+
+
+def _match_phone_in_text_raw(text: str, phone: NormalizedPhone) -> MatchResult:
     clean_text = sanitize_html_to_text(text)
     if not clean_text or not phone.is_possible:
         return MatchResult(
@@ -137,6 +199,11 @@ def match_phone_in_text(text: str, phone: NormalizedPhone) -> MatchResult:
                 snippet=snippet,
             )
             
+    # Grouped-digit match ("+91-9246579002", "011-26769666"); unambiguous forms win over the weak check
+    grouped = _match_grouped_digits(clean_text, phone)
+    if grouped and grouped.match_type == "EXACT":
+        return grouped
+
     # 4. Weak match: national digits without country code
     national_digits = phone.digits_only[len(str(phone.country_code)):] if len(phone.digits_only) > 10 else phone.digits_only
     if national_digits and len(national_digits) >= 10:
@@ -152,7 +219,11 @@ def match_phone_in_text(text: str, phone: NormalizedPhone) -> MatchResult:
                 matched_text=match.group(0),
                 snippet=snippet,
             )
-            
+
+    # 5. Grouped national digits in any local style: "94112 74848"
+    if grouped:
+        return grouped
+
     return MatchResult(
         matched=False,
         match_type="NONE",

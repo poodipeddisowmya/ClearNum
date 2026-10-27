@@ -58,3 +58,37 @@ def test_html_sanitization_strips_scripts():
     assert "alert" not in clean
     assert "<style>" not in clean
     assert "Hello World 415-555-2671" in clean
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("Call 92465 79002 for details", ("EXACT", "PROBABLE")),
+    ("Mobile: +91-9246579002", ("EXACT", "PROBABLE")),
+    ("Contact Support +91-09246579002", ("EXACT",)),
+    ("Ph: 092465-79002", ("EXACT",)),
+    ("(+91) 92465-79002", ("EXACT", "PROBABLE")),
+])
+def test_indian_local_formats_match(text, expected):
+    phone = parse_and_normalize("+919246579002", "IN")
+    res = match_phone_in_text(text, phone)
+    assert res.matched is True
+    assert res.match_type in expected
+
+
+def test_indian_landline_std_format_matches():
+    phone = parse_and_normalize("+911126769666", "IN")
+    res = match_phone_in_text("Delhi office: 011-26769666, Kolkata 033-22361401", phone)
+    assert res.matched is True and res.match_type == "EXACT"
+
+
+def test_other_country_code_with_same_digits_is_not_matched():
+    phone = parse_and_normalize("+919246579002", "IN")
+    res = match_phone_in_text("US line +1 924 657 9002 only", phone)
+    assert res.match_type != "EXACT"
+
+
+def test_snippet_never_contains_raw_number():
+    phone = parse_and_normalize("+919246579002", "IN")
+    res = match_phone_in_text("Contact Info +91- 92465 79002 Address Etawah", phone)
+    assert res.matched
+    assert "92465 79002" not in res.snippet and "9246579002" not in res.snippet
+    assert "••" in res.snippet

@@ -374,17 +374,16 @@ export const ExposuresView: React.FC<ExposuresViewProps> = ({
                         <button
                           onClick={() => {
                             setTransitioningExposure(exp);
+                            const s = exp.remediation_status;
                             setTargetNextState(
-                              exp.remediation_status === "DISCOVERED"
-                                ? "VERIFIED"
-                                : exp.remediation_status === "VERIFIED"
-                                ? "ACTION_AVAILABLE"
-                                : exp.remediation_status === "ACTION_AVAILABLE"
-                                ? "SUBMITTED"
-                                : exp.remediation_status === "SUBMITTED"
+                              s === "DISCOVERED" || s === "AWAITING_USER_REVIEW"
+                                ? "CONFIRMED_EXPOSURE"
+                                : s === "SUBMITTED"
                                 ? "ACKNOWLEDGED"
-                                : exp.remediation_status === "ACKNOWLEDGED"
-                                ? "VERIFIED_REMOVED"
+                                : s === "ACKNOWLEDGED" || s === "AWAITING_VERIFICATION" || s === "PENDING"
+                                ? "NO_LONGER_VISIBLE_AT_CHECKED_URL"
+                                : s === "NO_LONGER_VISIBLE_AT_CHECKED_URL" || s === "VERIFIED_REMOVED"
+                                ? "SOURCE_CONFIRMED_REMOVAL"
                                 : "SUBMITTED"
                             );
                           }}

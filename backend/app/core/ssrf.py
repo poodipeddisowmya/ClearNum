@@ -78,6 +78,13 @@ class SSRFValidationError(Exception):
 
 def is_ip_allowed(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> tuple[bool, str]:
     """Inspects an IP address against forbidden network specifications."""
+    # Handle IPv4-mapped IPv6 addresses first: is_private/is_loopback on these varies by Python version
+    if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped:
+        mapped_v4 = ip.ipv4_mapped
+        for net in DISALLOWED_IPV4_NETWORKS:
+            if mapped_v4 in net:
+                return False, f"IPv4-mapped address '{ip}' targets disallowed IPv4 range '{net}'"
+
     if ip.is_loopback:
         return False, f"Loopback address '{ip}'"
     if ip.is_private:
@@ -90,13 +97,6 @@ def is_ip_allowed(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> tuple[bo
         return False, f"Reserved address '{ip}'"
     if ip.is_unspecified:
         return False, f"Unspecified address '{ip}'"
-
-    # Handle IPv4-mapped IPv6 addresses (e.g. ::ffff:127.0.0.1)
-    if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped:
-        mapped_v4 = ip.ipv4_mapped
-        for net in DISALLOWED_IPV4_NETWORKS:
-            if mapped_v4 in net:
-                return False, f"IPv4-mapped address '{ip}' targets disallowed IPv4 range '{net}'"
 
     # Check explicit network lists
     if isinstance(ip, ipaddress.IPv4Address):

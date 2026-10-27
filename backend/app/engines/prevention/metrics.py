@@ -57,13 +57,20 @@ def calculate_metrics(identity_hmac: str) -> ExposureMetrics:
         + status_counts.get("VERIFIED_REMOVED", 0)
     )
     submitted_actions = status_counts.get("SUBMITTED", 0) + status_counts.get("ACKNOWLEDGED", 0)
-    pending_actions = status_counts.get("AWAITING_VERIFICATION", 0) + status_counts.get("PENDING", 0)
+    pending_actions = (
+        status_counts.get("AWAITING_VERIFICATION", 0)
+        + status_counts.get("PENDING", 0)
+        + status_counts.get("INACCESSIBLE_OR_INCONCLUSIVE", 0)
+        + status_counts.get("AWAITING_USER_REVIEW", 0)
+    )
     action_available = (
         status_counts.get("AWAITING_USER_APPROVAL", 0)
         + status_counts.get("REQUEST_PREPARED", 0)
         + status_counts.get("CONFIRMED_EXPOSURE", 0)
         + status_counts.get("ACTION_AVAILABLE", 0)
         + status_counts.get("VERIFIED", 0)
+        + status_counts.get("STILL_VISIBLE", 0)
+        + status_counts.get("REAPPEARED", 0)
     )
     rejected_matches = status_counts.get("REJECTED", 0)
 

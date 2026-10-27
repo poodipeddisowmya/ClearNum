@@ -105,7 +105,9 @@ export async function generateLegalTemplate(
   defaultRegion: string = "US",
   recipientName: string = "Data Broker Privacy Team",
   targetUrl?: string,
-  violatorNumber?: string
+  violatorNumber?: string,
+  incidentDate?: string,
+  incidentTime?: string
 ): Promise<GeneratedTemplate> {
   const res = await fetch(`${API_BASE}/remediation/template`, {
     method: "POST",
@@ -116,7 +118,9 @@ export async function generateLegalTemplate(
       default_region: defaultRegion,
       recipient_name: recipientName,
       target_url: targetUrl,
-      violator_number: violatorNumber,
+      violator_number: violatorNumber || undefined,
+      incident_date: incidentDate || undefined,
+      incident_time: incidentTime || undefined,
     }),
   });
   if (!res.ok) throw new Error(await res.text());

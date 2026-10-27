@@ -54,11 +54,16 @@ export function App() {
     }
   };
 
-  const handleScanComplete = async (identity: PhoneParseResult) => {
+  const handleScanComplete = async (identity: PhoneParseResult, found: number = 0, hadWarnings: boolean = false) => {
     setCurrentIdentity(identity);
     await refreshData(identity);
-    showToast(`Scan complete for ${identity.masked_display}. Discovered exposures loaded.`, "success");
-    setActiveTab("exposures");
+    // Stay on the scan page when nothing was found or a source failed, so its diagnostics stay visible
+    if (found > 0 && !hadWarnings) {
+      showToast(`Scan complete for ${identity.masked_display}: ${found} exposure(s) found.`, "success");
+      setActiveTab("exposures");
+    } else {
+      showToast(`Scan finished for ${identity.masked_display}: ${found} exposure(s) found. See source status below.`, "success");
+    }
   };
 
   const handleLoadDemo = async () => {

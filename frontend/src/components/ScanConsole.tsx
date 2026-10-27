@@ -15,7 +15,7 @@ import { parsePhone, scanDiscovery, getManualDorks } from "../api";
 
 interface ScanConsoleProps {
   currentIdentity: PhoneParseResult | null;
-  onScanComplete: (identity: PhoneParseResult) => void;
+  onScanComplete: (identity: PhoneParseResult, found?: number, hadWarnings?: boolean) => void;
   onOpenRemediation: () => void;
 }
 
@@ -37,7 +37,7 @@ export const ScanConsole: React.FC<ScanConsoleProps> = ({
   onScanComplete,
   onOpenRemediation,
 }) => {
-  const [phoneNumber, setPhoneNumber] = useState(currentIdentity?.raw_input || currentIdentity?.e164 || "+14155552671");
+  const [phoneNumber, setPhoneNumber] = useState(currentIdentity?.raw_input || currentIdentity?.e164 || "");
   const [region, setRegion] = useState(currentIdentity?.region_code || "US");
   const [parseData, setParseData] = useState<PhoneParseResult | null>(currentIdentity);
   const [isScanning, setIsScanning] = useState(false);
@@ -77,6 +77,12 @@ export const ScanConsole: React.FC<ScanConsoleProps> = ({
       alert("Please enter a possible phone number before scanning.");
       return;
     }
+    if (!parseData.is_valid && !window.confirm(
+      `This is not a valid number for the selected country (${region}). ` +
+      `Check the Country / Region box, or type the number with its country code (e.g. +91...). Scan anyway?`
+    )) {
+      return;
+    }
 
     setIsScanning(true);
     setScanMessage("Initiating local discovery engine across authorized search providers...");
@@ -103,7 +109,7 @@ export const ScanConsole: React.FC<ScanConsoleProps> = ({
       } else {
         setScanMessage(`Scan complete: Discovered ${res.total_found} potential exposure records across all queried providers.`);
       }
-      onScanComplete(parseData);
+      onScanComplete(parseData, res.total_found, res.scan_status !== "complete");
     } catch (err: any) {
       setScanMessage(`Scan completed with local fallback: ${err.message}`);
     } finally {
@@ -196,7 +202,7 @@ export const ScanConsole: React.FC<ScanConsoleProps> = ({
                   type="text"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="e.g. +1 (415) 555-2671"
+                  placeholder="e.g. +91 92465 79002 or +1 415 555 2671"
                   className="input-field font-mono font-medium"
                   required
                 />
@@ -331,7 +337,7 @@ export const ScanConsole: React.FC<ScanConsoleProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  {providerOutcomes.map((po) => {
+                  {providerOutcomes.map((po, poIdx) => {
                     const isHealthy = po.status === "healthy";
                     const isRateLimited = po.status === "rate_limited";
                     const isUnreachable = po.status === "unreachable";
@@ -346,7 +352,7 @@ export const ScanConsole: React.FC<ScanConsoleProps> = ({
 
                     return (
                       <div
-                        key={po.provider_id}
+                        key={`${po.provider_id}-${poIdx}`}
                         className="p-2.5 rounded bg-slate-900/80 border border-slate-800 text-xs flex flex-col md:flex-row md:items-center justify-between gap-2"
                       >
                         <div className="space-y-0.5">
@@ -360,6 +366,10 @@ export const ScanConsole: React.FC<ScanConsoleProps> = ({
                                 ? "Wikipedia / Wikimedia"
                                 : po.provider_id === "hackernews"
                                 ? "Hacker News (Algolia)"
+                                : po.provider_id === "wayback"
+                                ? "Internet Archive (Wayback)"
+                                : po.provider_id === "user_target"
+                                ? "Your URL"
                                 : po.provider_id}
                             </span>
                             <span className={`${badgeClass} text-[10px]`}>

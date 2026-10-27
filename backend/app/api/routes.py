@@ -1,5 +1,6 @@
 """FastAPI routes for NumberShield platform."""
 
+import datetime
 import os
 import uuid
 from pathlib import Path
@@ -12,6 +13,7 @@ from backend.app.core.database import get_db_connection, init_db, purge_all_data
 from backend.app.core.security import compute_phone_hmac, mask_phone_number
 from backend.app.core.ssrf import safe_fetch_url
 from backend.app.engines.discovery import parse_and_normalize, match_phone_in_text
+from backend.app.engines.discovery.matcher import mask_phone_in_text
 from backend.app.engines.discovery.providers import (
     SearXNGProvider,
     DuckDuckGoProvider,
@@ -30,6 +32,7 @@ from backend.app.engines.remediation import (
     lookup_source_by_url,
     get_all_sources,
     validate_transition,
+    normalize_state,
     ActionState,
     InvalidStateTransitionError,
     EVIDENCE_RULES,
@@ -147,24 +150,48 @@ async def scan_discovery_endpoint(req: ScanRequest):
 
     # Process user-supplied target URLs safely with SSRF protection
     if req.target_urls:
+        import time as _time
         for custom_url in req.target_urls:
             clean_custom = custom_url.strip()
-            if not clean_custom.startswith(("http://", "https://")):
+            if not clean_custom:
                 continue
-            try:
-                status_code, content, _ = await safe_fetch_url(clean_custom)
-                if status_code == 200:
-                    match_res = match_phone_in_text(content, norm)
-                    if match_res.matched:
-                        parsed_u = urlparse(clean_custom)
-                        all_provider_results.append(ProviderResult.from_url_and_title(
-                            url=clean_custom,
-                            title=f"Custom Target [{parsed_u.netloc}]",
-                            snippet=match_res.snippet,
-                            provider_id="user_target",
-                        ))
-            except Exception:
-                pass
+            netloc = urlparse(clean_custom).netloc or clean_custom
+            started = _time.perf_counter()
+            status, found, diagnostic = "unreachable", 0, ""
+            if not clean_custom.startswith(("http://", "https://")):
+                status, diagnostic = "unsupported", f"Skipped {clean_custom}: URL must start with http:// or https://"
+            else:
+                try:
+                    status_code, content, _ = await safe_fetch_url(clean_custom)
+                    if status_code == 200:
+                        status = "healthy"
+                        match_res = match_phone_in_text(content, norm)
+                        if match_res.matched:
+                            found = 1
+                            all_provider_results.append(ProviderResult.from_url_and_title(
+                                url=clean_custom,
+                                title=f"Custom Target [{netloc}]",
+                                snippet=match_res.snippet,
+                                provider_id="user_target",
+                            ))
+                            diagnostic = f"{netloc}: number found on page ({match_res.match_type})"
+                        else:
+                            diagnostic = f"{netloc}: page read, number not present"
+                    elif status_code in (403, 429, 503):
+                        status = "rate_limited"
+                        diagnostic = f"{netloc} blocked the automated check (HTTP {status_code}). Open it in your browser to check by hand."
+                    else:
+                        diagnostic = f"{netloc} returned HTTP {status_code}"
+                except Exception as e:
+                    diagnostic = f"Could not read {netloc}: {e}"
+            provider_outcomes.append(ProviderOutcomeItem(
+                provider_id="user_target",
+                status=status,
+                result_count=found,
+                duration_ms=int((_time.perf_counter() - started) * 1000),
+                retryable=status != "healthy",
+                diagnostic=diagnostic,
+            ))
 
     # Process and deduplicate results
     seen_urls = set()
@@ -181,7 +208,8 @@ async def scan_discovery_endpoint(req: ScanRequest):
         match_eval = match_phone_in_text(f"{item.title} {item.snippet}", norm)
         match_type = match_eval.match_type if match_eval.matched else "PROBABLE"
         confidence = match_eval.confidence if match_eval.matched else 0.75
-        snippet = match_eval.snippet if match_eval.snippet else (item.snippet or item.title)
+        snippet = match_eval.snippet if match_eval.snippet else mask_phone_in_text(item.snippet or item.title, norm)
+        item.title = mask_phone_in_text(item.title, norm)
 
         parsed = urlparse(clean_url)
         domain = parsed.netloc.lower().replace("www.", "")
@@ -227,7 +255,7 @@ async def scan_discovery_endpoint(req: ScanRequest):
 
         if not act_row:
             action_id = str(uuid.uuid4())
-            rem_status = "ACTION_AVAILABLE" if rem_source else "DISCOVERED"
+            rem_status = "AWAITING_USER_APPROVAL" if rem_source else "DISCOVERED"
             cursor.execute("""
                 INSERT INTO remediation_actions (
                     id, exposure_id, identity_hmac, source_id, status, official_url, notes, updated_at
@@ -382,6 +410,7 @@ def transition_action_endpoint(req: TransitionActionRequest):
 
     try:
         validate_transition(current_status, req.next_state)
+        next_state = normalize_state(req.next_state).value  # store canonical names, never legacy aliases
     except InvalidStateTransitionError as e:
         conn.close()
         raise HTTPException(status_code=400, detail=str(e))
@@ -392,11 +421,11 @@ def transition_action_endpoint(req: TransitionActionRequest):
         SET status = ?, submission_ref = COALESCE(?, submission_ref),
             notes = COALESCE(?, notes), updated_at = ?
         WHERE id = ?
-    """, (req.next_state, req.submission_ref, req.notes, now_iso, action_id))
+    """, (next_state, req.submission_ref, req.notes, now_iso, action_id))
 
     # Log immutable state transition into action_audit_log
     audit_id = str(uuid.uuid4())
-    evidence_rule = EVIDENCE_RULES.get(req.next_state)
+    evidence_rule = EVIDENCE_RULES.get(normalize_state(next_state))
     ev_type = evidence_rule.required_evidence_type if evidence_rule else "USER_TRANSITION"
     ev_notes = req.notes or (f"Submission reference: {req.submission_ref}" if req.submission_ref else "User initiated transition")
     cursor.execute("""
@@ -408,7 +437,7 @@ def transition_action_endpoint(req: TransitionActionRequest):
         action_id,
         req.identity_hmac,
         current_status,
-        req.next_state,
+        next_state,
         ev_type,
         ev_notes,
         now_iso,
@@ -417,7 +446,7 @@ def transition_action_endpoint(req: TransitionActionRequest):
     conn.commit()
     conn.close()
 
-    return {"success": True, "action_id": action_id, "new_status": req.next_state, "updated_at": now_iso}
+    return {"success": True, "action_id": action_id, "new_status": next_state, "updated_at": now_iso}
 
 
 @router.post("/remediation/template", response_model=GenerateTemplateResponse)
@@ -440,8 +469,8 @@ def generate_template_endpoint(req: GenerateTemplateRequest):
         tpl = generate_trai_1909_complaint(
             norm,
             req.violator_number or "9876543210",
-            req.incident_date or "24/10/26",
-            "14:30",
+            req.incident_date or datetime.date.today().strftime("%d/%m/%y"),
+            req.incident_time or datetime.datetime.now().strftime("%H:%M"),
         )
     elif t_type in ("MERCHANT_UNSUBSCRIBE", "MERCHANT_OPTOUT"):
         tpl = generate_merchant_unsubscribe(norm, req.recipient_name or "Company Operations")

@@ -150,6 +150,16 @@ def parse_and_normalize(
         spaced = national.replace("-", " ").replace("(", "").replace(")", "")
         parenthesized = national
 
+    # Outside NANP (+1) the 3-3-4 split is wrong (e.g. India writes "92465 79002"):
+    # use libphonenumber's local grouping from the international format instead.
+    intl_prefix = f"+{parsed_obj.country_code} "
+    if parsed_obj.country_code != 1 and international.startswith(intl_prefix) and " " in international[len(intl_prefix):]:
+        local_grouped = international[len(intl_prefix):]
+        dashed = local_grouped.replace(" ", "-")
+        dotted = local_grouped.replace(" ", ".")
+        spaced = local_grouped
+        parenthesized = national
+
     country_code = parsed_obj.country_code
     region_code = phonenumbers.region_code_for_number(parsed_obj) or (effective_region or "")
 

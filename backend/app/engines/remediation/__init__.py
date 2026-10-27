@@ -8,6 +8,7 @@ from backend.app.engines.remediation.registry import (
 from backend.app.engines.remediation.lifecycle import (
     ActionState,
     validate_transition,
+    normalize_state,
     get_state_color_token,
     InvalidStateTransitionError,
     EVIDENCE_RULES,

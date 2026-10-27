@@ -121,6 +121,9 @@ def template(
     region: str = typer.Option("US", help="Default ISO country code"),
     recipient: str = typer.Option("Privacy Officer", help="Recipient company or officer name"),
     target_url: str = typer.Option("", help="Specific exposure URL to cite"),
+    sender: str = typer.Option("", help="Spam caller / sender number (TRAI, TCPA)"),
+    date: str = typer.Option("", help="Date of the spam call: dd/mm/yy for TRAI, yyyy-mm-dd for TCPA (default: today)"),
+    time: str = typer.Option("", help="Time of the spam call, HH:MM (default: now)"),
 ):
     """Generates a formal, customized CCPA, GDPR, TCPA, TRAI, or Merchant privacy notice."""
     norm = parse_and_normalize(phone_number, region)
@@ -131,9 +134,12 @@ def template(
     elif "GDPR" in t:
         tpl = generate_gdpr_erasure(norm, recipient, target_url)
     elif "TRAI" in t:
-        tpl = generate_trai_1909_complaint(norm, "9876543210", "24/10/26", "14:30")
+        import datetime as _dt
+        now = _dt.datetime.now()
+        tpl = generate_trai_1909_complaint(norm, sender or "[SENDER NUMBER]", date or now.strftime("%d/%m/%y"), time or now.strftime("%H:%M"))
     elif "TCPA" in t:
-        tpl = generate_tcpa_ftc_complaint(norm, "1-800-555-0199", "2026-10-24", "Robocall")
+        import datetime as _dt
+        tpl = generate_tcpa_ftc_complaint(norm, sender or "[Unknown Caller ID]", date or _dt.date.today().isoformat(), "Robocall")
     else:
         tpl = generate_merchant_unsubscribe(norm, recipient)
 
@@ -168,7 +174,7 @@ def verify(
     
     outcome = asyncio.run(verify_exposure_url(exposure_id, url, norm, update_database=False))
     
-    color = "green" if outcome.status == "CONFIRMED_REMOVED" else ("yellow" if outcome.status == "UNABLE_TO_VERIFY" else "red")
+    color = {"NO_LONGER_VISIBLE_AT_CHECKED_URL": "green", "STILL_VISIBLE": "red"}.get(outcome.status, "yellow")
     console.print(Panel(
         f"[bold]Status:[/bold] [{color}]{outcome.status}[/{color}]\n"
         f"[bold]HTTP Status Code:[/bold] {outcome.http_status_code or 'N/A'}\n"

@@ -110,8 +110,8 @@ async def test_e2e_discovery_pipeline_full_lifecycle():
         # Verify remediation actions created
         c.execute("SELECT id, exposure_id, status FROM remediation_actions WHERE identity_hmac = ?", (identity_hmac,))
         act_rows = c.fetchall()
-        # Select action where broker registry provides ACTION_AVAILABLE status
-        target_action = next(a for a in act_rows if a["status"] == "ACTION_AVAILABLE")
+        # Select action where broker registry provides AWAITING_USER_APPROVAL status (canonical name for legacy ACTION_AVAILABLE)
+        target_action = next(a for a in act_rows if a["status"] == "AWAITING_USER_APPROVAL")
         target_exposure_id = target_action["exposure_id"]
 
         # Step 2: Transition remediation state

@@ -92,6 +92,7 @@ class GenerateTemplateRequest(BaseModel):
     target_url: Optional[str] = None
     violator_number: Optional[str] = None
     incident_date: Optional[str] = None
+    incident_time: Optional[str] = None  # HH:MM, used by TRAI 1909
     call_description: Optional[str] = None
 
 

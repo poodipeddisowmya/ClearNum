@@ -31,6 +31,9 @@ env/
 .numbershield_key
 *.sqlite3
 *.db
+*.db-wal
+*.db-shm
+data/
 temp_imports/
 
 # Testing & Coverage

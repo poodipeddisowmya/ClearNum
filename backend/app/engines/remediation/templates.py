@@ -117,8 +117,8 @@ def generate_trai_1909_complaint(phone: NormalizedPhone, violator_number: str, i
     sms_text = f"COMP TEL NO {violator_number}, {incident_date_ddmmyy}, {incident_time}"
     body = f"""TRAI DND COMPLAINT PROCEDURE (INDIA)
 
-Under TRAI Telecom Commercial Communications Customer Preference Regulations (TCCCPR 2018):
-Send an SMS to shortcode: 1909
+Under TRAI Telecom Commercial Communications Customer Preference Regulations (TCCCPR 2018, as amended 2025):
+Send an SMS to shortcode: 1909 (or use the TRAI DND app)
 From your registered number: {phone.e164}
 
 EXACT SMS TEXT TO SEND (Copy to clipboard):
@@ -129,7 +129,7 @@ EXACT SMS TEXT TO SEND (Copy to clipboard):
 Example: If you received spam from 9876543210 on 24th October at 14:30:
 COMP TEL NO 9876543210, 24/10/26, 14:30
 
-Note: Must be submitted within 3 days of receiving the unsolicited communication.
+Note: Must be submitted within 7 days of receiving the unsolicited communication (TCCCPR amendment, Feb 2025).
 Your telecom operator (Airtel/Jio/Vi) will issue a formal complaint ticket and investigate the offending telemarketer.
 """
     return GeneratedTemplate(

@@ -27,6 +27,28 @@ class RemediationSource:
 
 
 REMEDIATION_REGISTRY: Dict[str, RemediationSource] = {
+    # --- India / Global Caller-ID Directories ---
+    "truecaller": RemediationSource(
+        source_id="truecaller",
+        name="Truecaller",
+        category="people_directory",
+        domains=["truecaller.com"],
+        official_removal_url="https://www.truecaller.com/unlisting",
+        removal_method="online_form",
+        instructions=[
+            "1. If you use the Truecaller app, deactivate your account first (app Settings > Privacy Center > Deactivate). Unlisting does not work while the account is active.",
+            "2. Open https://www.truecaller.com/unlisting in your browser.",
+            "3. Enter your number with country code (e.g. +91XXXXXXXXXX), choose a reason, and complete the CAPTCHA yourself.",
+            "4. Click 'Unlist' and confirm the request.",
+            "5. After 24-48 hours, search your number on truecaller.com to confirm your name no longer appears.",
+        ],
+        processing_time_estimate="24 to 48 hours",
+        requires_email_confirmation=False,
+        requires_phone_call=False,
+        statutory_rights=["DPDP Act 2023 (India)", "GDPR"],
+        notes="Unlisting removes your name from caller-ID lookups; you can no longer use Truecaller search yourself. Names can reappear if others' contact books upload them again, so re-check every few months.",
+    ),
+
     # --- US Major People Search Directories & Data Brokers ---
     "fastpeoplesearch": RemediationSource(
         source_id="fastpeoplesearch",
@@ -381,7 +403,7 @@ REMEDIATION_REGISTRY: Dict[str, RemediationSource] = {
         instructions=[
             "1. Send an SMS 'START 0' to 1909 to block all commercial telemarketing categories.",
             "2. Alternatively, dial 1909 (toll-free IVR) from your registered mobile number.",
-            "3. To report an unsolicited commercial call/SMS, send SMS to 1909 within 3 days in format:",
+            "3. To report an unsolicited commercial call/SMS, send SMS to 1909 within 7 days in format:",
             "   'COMP TEL NO XXXXXXXXXX, dd/mm/yy, Time' (e.g. COMP TEL NO 9876543210, 24/10/26, 14:30)",
             "4. Carrier investigates and disconnects repeat telemarketing offenders under TRAI TCCCPR regulations.",
         ],

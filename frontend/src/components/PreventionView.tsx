@@ -36,13 +36,15 @@ export const PreventionView: React.FC<PreventionViewProps> = ({ currentIdentity 
   const [senderNumber, setSenderNumber] = useState("");
   const [channel, setChannel] = useState("CALL");
   const [category, setCategory] = useState("ROBOCALL");
-  const [spoofSuspected, setSpoofSuspected] = useState(true);
+  const [spoofSuspected, setSpoofSuspected] = useState(false);
   const [campaignSummary, setCampaignSummary] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
 
   // Active DND Guide tab
-  const [selectedCountry, setSelectedCountry] = useState("US");
+  const [selectedCountry, setSelectedCountry] = useState(
+    ["US", "GB", "IN", "CA", "AU"].includes(currentIdentity?.region_code || "") ? currentIdentity!.region_code : "US"
+  );
 
   const refreshData = useCallback(async () => {
     try {

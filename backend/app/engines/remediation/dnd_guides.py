@@ -76,9 +76,9 @@ COUNTRY_DND_GUIDES: Dict[str, DNDCountryGuide] = {
             "Download and use the official TRAI DND 3.0 app for Android/iOS.",
         ],
         carrier_spam_forwarding_code="1909",
-        carrier_forwarding_instructions="To register a commercial communication complaint, send SMS to 1909 in format: 'COMP TEL NO XXXXXXXXXX, dd/mm/yy, Time' within 3 days of receipt.",
+        carrier_forwarding_instructions="To register a commercial communication complaint, send SMS to 1909 in format: 'COMP TEL NO XXXXXXXXXX, dd/mm/yy, Time' within 7 days of receipt.",
         how_to_file_complaint=[
-            "Send complaint SMS to 1909 within 3 days of receiving spam call/SMS.",
+            "Send complaint SMS to 1909 within 7 days of receiving spam call/SMS.",
             "Your access provider (Airtel, Jio, Vi, BSNL) will issue a complaint registration number.",
             "The telecom provider is statutorily required to complete an investigation and notify you within 7 days.",
             "Repeat telemarketing violators face financial penalties and disconnection.",

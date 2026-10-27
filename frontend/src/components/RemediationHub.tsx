@@ -37,6 +37,8 @@ export const RemediationHub: React.FC<RemediationHubProps> = ({
   const [recipientName, setRecipientName] = useState("Data Broker Privacy & Legal Team");
   const [targetUrl, setTargetUrl] = useState("");
   const [violatorNumber, setViolatorNumber] = useState("");
+  const [incidentDate, setIncidentDate] = useState("");
+  const [incidentTime, setIncidentTime] = useState("");
   const [generatedTemplate, setGeneratedTemplate] = useState<GeneratedTemplate | null>(null);
   const [templateError, setTemplateError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -74,8 +76,15 @@ export const RemediationHub: React.FC<RemediationHubProps> = ({
     setIsGenerating(true);
     setTemplateError(null);
 
-    const phoneVal = currentIdentity?.e164 || currentIdentity?.masked_display || "+14155552671";
-    const regionVal = currentIdentity?.region_code || "US";
+    if (!currentIdentity?.e164) {
+      setTemplateError("Enter and validate your phone number in the Scan Console first, so the notice is written for your number.");
+      setIsGenerating(false);
+      return;
+    }
+    const phoneVal = currentIdentity.e164;
+    const regionVal = currentIdentity.region_code || "US";
+    // TRAI 1909 expects dd/mm/yy; <input type="date"> gives yyyy-mm-dd
+    const traiDate = incidentDate ? `${incidentDate.slice(8, 10)}/${incidentDate.slice(5, 7)}/${incidentDate.slice(2, 4)}` : "";
 
     try {
       const res = await generateLegalTemplate(
@@ -84,7 +93,9 @@ export const RemediationHub: React.FC<RemediationHubProps> = ({
         regionVal,
         recipientName,
         targetUrl,
-        violatorNumber
+        violatorNumber,
+        templateType === "TRAI_1909" ? traiDate : incidentDate,
+        incidentTime
       );
       setGeneratedTemplate(res);
     } catch (err: any) {
@@ -261,7 +272,7 @@ export const RemediationHub: React.FC<RemediationHubProps> = ({
                       <ol className="list-decimal list-inside space-y-0.5 text-[11px] leading-relaxed">
                         {source.instructions.map((step, idx) => (
                           <li key={idx} className="text-slate-300">
-                            {step}
+                            {step.replace(/^\d+\.\s*/, "")}
                           </li>
                         ))}
                       </ol>
@@ -374,18 +385,31 @@ export const RemediationHub: React.FC<RemediationHubProps> = ({
                   />
                 </div>
 
-                {(templateType === "TCPA_REVOCATION" || templateType === "TRAI_COMMERCIAL") && (
+                {(templateType === "TCPA_COMPLAINT" || templateType === "TRAI_1909") && (
                   <div>
                     <label className="text-xs font-semibold text-slate-300 block mb-1">
-                      Violator Calling / Sender Number (Optional)
+                      Spam Caller / Sender Number
                     </label>
                     <input
                       type="text"
                       value={violatorNumber}
                       onChange={(e) => setViolatorNumber(e.target.value)}
                       className="input-field text-xs font-mono"
-                      placeholder="+1 (800) 555-0199"
+                      placeholder={templateType === "TRAI_1909" ? "e.g. 7000012345 or VM-ABCDEF" : "+1 (800) 555-0199"}
                     />
+                  </div>
+                )}
+
+                {(templateType === "TCPA_COMPLAINT" || templateType === "TRAI_1909") && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs font-semibold text-slate-300 block mb-1">Date of call / SMS</label>
+                      <input type="date" value={incidentDate} onChange={(e) => setIncidentDate(e.target.value)} className="input-field text-xs" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-slate-300 block mb-1">Time</label>
+                      <input type="time" value={incidentTime} onChange={(e) => setIncidentTime(e.target.value)} className="input-field text-xs" />
+                    </div>
                   </div>
                 )}
 
