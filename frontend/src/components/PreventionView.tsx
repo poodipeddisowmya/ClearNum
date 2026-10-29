@@ -132,10 +132,12 @@ export const PreventionView: React.FC<PreventionViewProps> = ({ currentIdentity 
 
         {/* Live Metrics Counters */}
         {metrics && (
-          <div className="flex items-center gap-3 self-start md:self-center">
-            <div className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-center">
-              <div className="text-[10px] uppercase font-semibold text-slate-400">Success Rate</div>
-              <div className="text-base font-bold font-mono text-emerald-400">
+          <div className="flex items-center gap-3 self-start md:self-center flex-wrap">
+            <div className="card p-3 text-center min-w-[90px]">
+              <div className="text-[10px] font-semibold text-[var(--text-dim)] uppercase tracking-wider">
+                Success Rate
+              </div>
+              <div className="text-sm font-bold text-[var(--pixel-green)] mt-0.5">
                 {Math.round(metrics.removal_success_rate)}%
               </div>
             </div>
@@ -405,15 +407,15 @@ export const PreventionView: React.FC<PreventionViewProps> = ({ currentIdentity 
             {/* Active Guide Card */}
             {activeGuide && (
               <div className="space-y-4 pt-2">
-                <div className="card p-3.5 flex items-start justify-between gap-3 bg-[var(--bg-app)]">
-                  <div>
+                <div className="card p-3.5 flex flex-wrap items-start justify-between gap-3 bg-[var(--bg-app)]">
+                  <div className="min-w-0 flex-1">
                     <h4 className="text-sm font-bold text-[var(--text-main)]">
                       {activeGuide.registry_name}
                     </h4>
                     <p className="text-xs text-[var(--pixel-cyan)] mt-0.5">
                       {activeGuide.legal_basis}
                     </p>
-                    <p className="font-mono text-[11px] text-[var(--text-dim)] mt-0.5">
+                    <p className="font-mono text-[11px] text-[var(--text-dim)] mt-0.5 [overflow-wrap:anywhere]">
                       {activeGuide.official_website}
                     </p>
                   </div>

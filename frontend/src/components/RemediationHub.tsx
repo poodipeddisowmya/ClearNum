@@ -274,11 +274,9 @@ export const RemediationHub: React.FC<RemediationHubProps> = ({
                       <div className="text-[10px] font-bold text-[var(--pixel-green)] uppercase tracking-wider">
                         Opt-Out Procedure:
                       </div>
-                      <ol className="list-decimal list-inside space-y-0.5 text-[11px] leading-relaxed [overflow-wrap:anywhere]">
+                      <ol className="list-decimal list-inside space-y-1 text-[11px] text-[var(--text-muted)] leading-relaxed [overflow-wrap:anywhere]">
                         {source.instructions.map((step, idx) => (
-                          <li key={idx} className="text-slate-300">
-                            {step.replace(/^\d+\.\s*/, "")}
-                          </li>
+                          <li key={idx}>{step.replace(/^\d+\.\s*/, "")}</li>
                         ))}
                       </ol>
                     </div>
@@ -392,7 +390,7 @@ export const RemediationHub: React.FC<RemediationHubProps> = ({
 
                 {(templateType === "TCPA_COMPLAINT" || templateType === "TRAI_1909") && (
                   <div>
-                    <label className="text-xs font-semibold text-slate-300 block mb-1">
+                    <label className="text-xs font-semibold text-[var(--text-muted)] block mb-1 uppercase tracking-wider">
                       Spam Caller / Sender Number
                     </label>
                     <input
@@ -408,11 +406,11 @@ export const RemediationHub: React.FC<RemediationHubProps> = ({
                 {(templateType === "TCPA_COMPLAINT" || templateType === "TRAI_1909") && (
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-xs font-semibold text-slate-300 block mb-1">Date of call / SMS</label>
+                      <label className="text-xs font-semibold text-[var(--text-muted)] block mb-1 uppercase tracking-wider">Date of call / SMS</label>
                       <input type="date" value={incidentDate} onChange={(e) => setIncidentDate(e.target.value)} className="input-field text-xs" />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-slate-300 block mb-1">Time</label>
+                      <label className="text-xs font-semibold text-[var(--text-muted)] block mb-1 uppercase tracking-wider">Time</label>
                       <input type="time" value={incidentTime} onChange={(e) => setIncidentTime(e.target.value)} className="input-field text-xs" />
                     </div>
                   </div>

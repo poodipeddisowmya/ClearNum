@@ -73,8 +73,11 @@ export const ScanConsole: React.FC<ScanConsoleProps> = ({
   onScanComplete,
   onOpenRemediation,
 }) => {
-  const [phoneNumber, setPhoneNumber] = useState(currentIdentity?.raw_input || currentIdentity?.e164 || "");
-  const [region, setRegion] = useState(currentIdentity?.region_code || "US");
+  const [activeTab, setActiveTab] = useState<"web" | "sms">("web");
+  const [phoneNumber, setPhoneNumber] = useState(
+    currentIdentity?.raw_input || currentIdentity?.e164 || ""
+  );
+  const [region, setRegion] = useState(currentIdentity?.region_code || "IN");
   const [parseData, setParseData] = useState<PhoneParseResult | null>(currentIdentity);
   const [isScanning, setIsScanning] = useState(false);
   const [providers, setProviders] = useState({
@@ -235,6 +238,8 @@ export const ScanConsole: React.FC<ScanConsoleProps> = ({
         return "Hacker News (Algolia)";
       case "wayback":
         return "Wayback Machine (CDX)";
+      case "user_target":
+        return "Your URL";
       default:
         return id.toUpperCase();
     }
@@ -275,7 +280,7 @@ export const ScanConsole: React.FC<ScanConsoleProps> = ({
               Investigate public web leaks referencing your phone number, or analyze commercial SMS headers from banks, apps, and telemarketers to enforce statutory Do-Not-Disturb opt-outs.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
             <button
               type="button"
               onClick={handleOpenDorks}
@@ -355,18 +360,20 @@ export const ScanConsole: React.FC<ScanConsoleProps> = ({
                   </select>
                 </div>
 
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Phone Number</label>
-                <input
-                  type="text"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="e.g. +91 92465 79002 or +1 415 555 2671"
-                  className="input-field font-mono font-medium"
-                  required
-                />
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-[var(--text-muted)] mb-1.5 uppercase tracking-wider">
+                    Phone Number
+                  </label>
+                  <input
+                    type="text"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    placeholder="e.g. +91 92465 79002 or 9246579002"
+                    className="input-field font-mono text-sm"
+                    required
+                  />
+                </div>
               </div>
-            </div>
 
               {/* Provider Checkboxes */}
               <div className="pt-3 border-t border-[var(--border-subtle)] space-y-3">
@@ -482,56 +489,44 @@ export const ScanConsole: React.FC<ScanConsoleProps> = ({
                     </span>
                   </div>
 
-                <div className="space-y-2">
-                  {providerOutcomes.map((po, poIdx) => {
-                    const isHealthy = po.status === "healthy";
-                    const isRateLimited = po.status === "rate_limited";
-                    const isUnreachable = po.status === "unreachable";
-
-                    const badgeClass = isHealthy
-                      ? "status-pill pill-emerald"
-                      : isRateLimited
-                      ? "status-pill pill-amber"
-                      : isUnreachable
-                      ? "status-pill pill-rose"
-                      : "status-pill pill-slate";
-
-                    return (
-                      <div
-                        key={`${po.provider_id}-${poIdx}`}
-                        className="p-2.5 rounded bg-slate-900/80 border border-slate-800 text-xs flex flex-col md:flex-row md:items-center justify-between gap-2"
-                      >
-                        <div className="space-y-0.5">
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold text-slate-200 capitalize">
-                              {po.provider_id === "duckduckgo"
-                                ? "DuckDuckGo Web"
-                                : po.provider_id === "searxng"
-                                ? "SearXNG Engine"
-                                : po.provider_id === "wikimedia"
-                                ? "Wikipedia / Wikimedia"
-                                : po.provider_id === "hackernews"
-                                ? "Hacker News (Algolia)"
-                                : po.provider_id === "wayback"
-                                ? "Internet Archive (Wayback)"
-                                : po.provider_id === "user_target"
-                                ? "Your URL"
-                                : po.provider_id}
-                            </span>
-                            <span className={`${badgeClass} text-[10px]`}>
-                              {po.status.replace("_", " ")}
-                            </span>
-                            <span className="text-[11px] text-[var(--text-dim)]">({po.duration_ms}ms)</span>
+                  <div className="space-y-2">
+                    {providerOutcomes.map((po, poIdx) => {
+                      const isHealthy = po.status === "healthy";
+                      const isRateLimited = po.status === "rate_limited";
+                      return (
+                        <div
+                          key={`${po.provider_id}-${poIdx}`}
+                          className="flex items-start justify-between gap-3 p-3 rounded bg-[var(--bg-app)] border border-[var(--border-subtle)]"
+                        >
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-xs text-[var(--text-main)]">
+                                {getProviderDisplayName(po.provider_id)}
+                              </span>
+                              <span
+                                className={`status-pill ${
+                                  isHealthy
+                                    ? "pill-pixel-green"
+                                    : isRateLimited
+                                    ? "pill-pixel-yellow"
+                                    : "pill-pixel-purple"
+                                }`}
+                              >
+                                {po.status.toUpperCase()}
+                              </span>
+                              <span className="font-mono text-[11px] text-[var(--text-dim)]">
+                                ({po.duration_ms}ms)
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-[var(--text-muted)]">{po.diagnostic}</p>
                           </div>
-                          <p className="text-[11px] text-[var(--text-muted)]">{po.diagnostic}</p>
+                          <div className="font-mono text-xs text-[var(--pixel-green)] font-semibold shrink-0">
+                            {po.result_count} {po.result_count === 1 ? "match" : "matches"}
+                          </div>
                         </div>
-                        <div className="text-[11px] font-mono text-slate-300 shrink-0">
-                          {po.result_count} {po.result_count === 1 ? "match" : "matches"}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
 
                   {/* Context for 0 Results */}
                   {totalFound === 0 && (
@@ -561,21 +556,13 @@ export const ScanConsole: React.FC<ScanConsoleProps> = ({
             </div>
           </div>
 
-        {/* Right 1 Column: Telephony Normalization Metadata */}
-        <div className="space-y-6">
-          <div className="panel-card p-5 space-y-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)] flex items-center justify-between">
-              <span>Telephony Profile</span>
-              {parseData?.is_valid ? (
-                <span className="status-pill pill-emerald text-[10px]">Valid Number</span>
-              ) : parseData?.is_possible ? (
-                <span className="status-pill pill-amber text-[10px]">Possible</span>
-              ) : !parseData || !phoneNumber.trim() ? (
-                <span className="status-pill pill-neutral text-[10px]">Waiting for input</span>
-              ) : (
-                <span className="status-pill pill-rose text-[10px]">Invalid Format</span>
-              )}
-            </h3>
+          {/* Right 1 Column: Telephony Normalization Metadata */}
+          <div className="space-y-6">
+            <div className="card p-5 space-y-4">
+              <h3 className="section-title">
+                <Database className="w-4 h-4 text-[var(--pixel-cyan)]" />
+                Telephony Profile
+              </h3>
 
               {parseData ? (
                 <div className="space-y-3.5 text-xs">

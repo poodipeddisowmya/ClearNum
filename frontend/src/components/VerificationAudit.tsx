@@ -177,7 +177,7 @@ export const VerificationAudit: React.FC<VerificationAuditProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 self-start md:self-center">
+        <div className="flex flex-wrap items-center gap-2.5 self-start md:self-center">
           <button
             onClick={handleExportReport}
             disabled={exportLoading || !currentIdentity}

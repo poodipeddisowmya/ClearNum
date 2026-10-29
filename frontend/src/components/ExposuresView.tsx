@@ -256,16 +256,16 @@ export const ExposuresView: React.FC<ExposuresViewProps> = ({
       {/* Verification Live Alert Banner (if recently triggered) */}
       {verificationFeedback && (
         <div
-          className={`p-3 rounded-lg border text-xs flex items-start gap-2.5 ${
+          className={`p-3 rounded-lg border flex items-start gap-2.5 ${
             verificationFeedback.status === "NO_LONGER_VISIBLE_AT_CHECKED_URL"
-              ? "bg-emerald-950/40 border-emerald-800 text-emerald-300"
+              ? "border-emerald-500/40 bg-emerald-950/20 text-emerald-400"
               : verificationFeedback.status === "STILL_VISIBLE"
-              ? "bg-rose-950/40 border-rose-800 text-rose-300"
-              : "bg-slate-900 border-slate-700 text-slate-300"
+              ? "border-rose-500/40 bg-rose-950/20 text-rose-400"
+              : "border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--text-main)]"
           }`}
         >
           {verificationFeedback.status === "NO_LONGER_VISIBLE_AT_CHECKED_URL" ? (
-            <ShieldCheck className="w-4 h-4 mt-0.5 text-emerald-400 shrink-0" />
+            <ShieldCheck className="w-4 h-4 mt-0.5 shrink-0" />
           ) : (
             <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
           )}
@@ -350,11 +350,11 @@ export const ExposuresView: React.FC<ExposuresViewProps> = ({
             <table className="data-table">
               <thead>
                 <tr>
-                  <th style={{ width: "24%" }}>Source / Domain</th>
-                  <th style={{ width: "38%" }}>Indexed Listing Snippet</th>
-                  <th style={{ width: "16%" }}>Match Confidence</th>
-                  <th style={{ width: "12%" }}>Lifecycle State</th>
-                  <th style={{ width: "1%", textAlign: "right" }}>Actions</th>
+                  <th style={{ width: "20%" }}>SOURCE / DOMAIN</th>
+                  <th style={{ width: "34%" }}>INDEXED LISTING SNIPPET</th>
+                  <th style={{ width: "14%" }}>MATCH CONFIDENCE</th>
+                  <th style={{ width: "14%" }}>LIFECYCLE STATE</th>
+                  <th style={{ width: "18%", textAlign: "right", whiteSpace: "nowrap" }}>ACTIONS</th>
                 </tr>
               </thead>
               <tbody>
@@ -439,7 +439,7 @@ export const ExposuresView: React.FC<ExposuresViewProps> = ({
                           <RefreshCw
                             className={`w-3 h-3 ${verifyingId === exp.id ? "animate-spin" : ""}`}
                           />
-                          <span className="hidden 2xl:inline text-[11px]">Verify</span>
+                          <span>{verifyingId === exp.id ? "Checking..." : "Re-check Live"}</span>
                         </button>
 
                         <button
@@ -458,12 +458,15 @@ export const ExposuresView: React.FC<ExposuresViewProps> = ({
                                 ? "SOURCE_CONFIRMED_REMOVAL"
                                 : "SUBMITTED"
                             );
+                            setSubmissionRef("");
+                            setTransitionNotes("");
+                            setTransitionError(null);
                           }}
                           className="btn btn-secondary py-1 px-2.5 text-[11px] font-semibold shrink-0"
                           title="Update truthful lifecycle state"
                         >
-                          <SlidersHorizontal className="w-3 h-3 text-slate-300" />
-                          <span className="hidden 2xl:inline text-[11px]">Update</span>
+                          <SlidersHorizontal className="w-3 h-3 text-[var(--pixel-cyan)]" />
+                          <span>Update</span>
                         </button>
 
                         {exp.source_id !== "generic_web" && (
